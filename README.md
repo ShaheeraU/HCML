@@ -1,168 +1,320 @@
-<<<<<<< HEAD
-READ ME
-=======
-# Mobile Face Recognition System
+# Face Recognition API
 
-A comprehensive face recognition system built with PyTorch and Flutter, featuring MobileFaceNet optimized for mobile deployment using AdaDistill knowledge distillation.
+A Flask-based REST API for face registration and recognition using the MobileFaceNet model.
 
 ## Features
 
-- **Advanced Face Detection**: MTCNN-based face detection and alignment
-- **Mobile-Optimized Model**: MobileFaceNet with AdaDistill optimization
-- **Cross-Platform Support**: Flutter app for iOS and Android
-- **ONNX Runtime Integration**: Optimized inference on mobile devices
-- **Real-time Processing**: Camera and gallery image processing
-- **User Management**: Complete registration and recognition system
+- **Face Registration**: Register new faces with names and unique IDs
+- **Face Recognition**: Recognize faces from the database
+- **User Management**: List, view, and delete registered users
+- **File-based Storage**: Images stored in `data/` folder, metadata in JSON
+- **Base64 Image Support**: Accept images as base64 encoded strings
 
-## Project Structure
+## API Endpoints
 
+### 1. Health Check
 ```
-mobile_face_recognition/
-├── app.py                          # Main Python application
-├── face_recognition_system.py      # Core face recognition system
-├── mobile_facenet_converter.py     # Model conversion utilities
-├── face_database.json             # User face database
-├── requirements.txt                # Python dependencies
-├── model/                          # Model files
-│   ├── MFN_AdaArcDistill_backbone.pth
-│   ├── mobile_config.json
-│   └── mobilefacenet_mobile.onnx
-├── data/                           # Sample images
-│   ├── chris_hemsworth_sample1.jpg
-│   ├── chris_hemsworth_sample2.jpg
-│   └── prit_sample1.jpeg
-├── output/                         # Processed images
-└── flutter_app/                    # Flutter mobile application
-    └── flutter_application_1/
+GET /health
+```
+Returns the health status of the API and face recognition system.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00",
+  "face_recognition_system": "initialized"
+}
 ```
 
-## Setup
+### 2. Register Face
+```
+POST /register
+```
+Register a new face with name and image.
 
-### Prerequisites
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "image": "base64_encoded_image_string"
+}
+```
 
-- Python 3.8+
-- Flutter SDK
-- PyTorch
-- OpenCV
+**Response (Success - 201):**
+```json
+{
+  "success": true,
+  "user_id": "uuid-string",
+  "name": "John Doe",
+  "message": "Face registered successfully"
+}
+```
 
-## Python Standalone Script Setup
+**Response (Error - 400/500):**
+```json
+{
+  "error": "Error message"
+}
+```
 
-1. **Install dependencies**
+### 3. Recognize Face
+```
+POST /recognize
+```
+Recognize a face from the database.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+**Request Body:**
+```json
+{
+  "image": "base64_encoded_image_string",
+  "threshold": 0.3
+}
+```
 
-2. **Run the application**
-   ```bash
-   python app.py
-   ```
+**Response (Match Found):**
+```json
+{
+  "success": true,
+  "match_found": true,
+  "user_id": "uuid-string",
+  "name": "John Doe",
+  "similarity": 0.85,
+  "threshold": 0.3,
+  "registered_at": "2024-01-15T10:30:00",
+  "image_path": "data/uuid-string.jpg"
+}
+```
 
-### How to use
+**Response (No Match):**
+```json
+{
+  "success": true,
+  "match_found": false,
+  "message": "No matching face found",
+  "best_similarity": 0.25,
+  "threshold": 0.3
+}
+```
 
-- You can edit the name and image path for the user registration in the app.py
-- You can edit the path of the image to match the face in app.py
+### 4. List Users
+```
+GET /users
+```
+List all registered users.
 
-### Example Usage
+**Response:**
+```json
+{
+  "success": true,
+  "total_users": 2,
+  "users": [
+    {
+      "user_id": "uuid-1",
+      "name": "John Doe",
+      "registered_at": "2024-01-15T10:30:00",
+      "image_path": "data/uuid-1.jpg"
+    },
+    {
+      "user_id": "uuid-2",
+      "name": "Jane Smith",
+      "registered_at": "2024-01-15T11:00:00",
+      "image_path": "data/uuid-2.jpg"
+    }
+  ]
+}
+```
+
+### 5. Get User Details
+```
+GET /users/<user_id>
+```
+Get details of a specific user.
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "user_id": "uuid-string",
+    "name": "John Doe",
+    "registered_at": "2024-01-15T10:30:00",
+    "image_path": "data/uuid-string.jpg"
+  }
+}
+```
+
+### 6. Delete User
+```
+DELETE /users/<user_id>
+```
+Delete a user and their associated data.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User John Doe deleted successfully"
+}
+```
+
+## Installation & Setup
+
+### 1. Install Dependencies
+```bash
+# Install main requirements
+pip install -r requirements.txt
+
+# Install API-specific requirements
+pip install -r api_requirements.txt
+```
+
+### 2. Run the API
+```bash
+python api.py
+```
+
+The API will start on `http://localhost:5000`
+
+### 3. Test the API
+```bash
+python test_api.py
+```
+
+## Usage Examples
+
+### Python Client Example
 
 ```python
-from face_recognition_system import FaceRecognitionSystem
+import requests
+import base64
 
-# Initialize system
-fr_system = FaceRecognitionSystem()
+# Encode image to base64
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
-# Register users with custom names and images
-fr_system.register_user("John Doe", "data/john.jpg")
-fr_system.register_user("Jane Smith", "data/jane.jpg")
+# Register a face
+def register_face(name, image_path):
+    url = "http://localhost:5000/register"
+    data = {
+        "name": name,
+        "image": encode_image(image_path)
+    }
+    response = requests.post(url, json=data)
+    return response.json()
 
-# Match a face with custom threshold
-user_id, name, similarity = fr_system.match_face(
-    "data/test_image.jpg",
-    threshold=0.3  # Adjust threshold: 0.2 (lenient) to 0.5 (strict)
-)
+# Recognize a face
+def recognize_face(image_path, threshold=0.3):
+    url = "http://localhost:5000/recognize"
+    data = {
+        "image": encode_image(image_path),
+        "threshold": threshold
+    }
+    response = requests.post(url, json=data)
+    return response.json()
 
-if user_id:
-    print(f"Recognized: {name} (Confidence: {similarity:.3f})")
+# Usage
+result = register_face("John Doe", "path/to/image.jpg")
+print(f"Registered with ID: {result['user_id']}")
+
+match = recognize_face("path/to/query_image.jpg")
+if match['match_found']:
+    print(f"Recognized: {match['name']}")
 else:
     print("No match found")
 ```
 
-## Flutter Mobile App
+### cURL Examples
 
-1. **Install Flutter dependencies**
+**Register a face:**
+```bash
+curl -X POST http://localhost:5000/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "image": "base64_encoded_image_string"
+  }'
+```
 
-   ```bash
-   cd flutter_app/flutter_application_1
-   flutter pub get
-   ```
+**Recognize a face:**
+```bash
+curl -X POST http://localhost:5000/recognize \
+  -H "Content-Type: application/json" \
+  -d '{
+    "image": "base64_encoded_image_string",
+    "threshold": 0.3
+  }'
+```
 
-2. **Run the app**
-   ```bash
-   flutter run
-   ```
+**List all users:**
+```bash
+curl http://localhost:5000/users
+```
 
-### Flutter App Features
+## File Structure
 
-- **Face Detection Test**: Upload images and test face detection
-- **ONNX Integration**: Test model inference with face embeddings
-- **Gallery Support**: Process images from device gallery
-- **Real-time Analysis**: Face positioning and quality feedback
-
-## Model Files
-
-Ensure these files are in the `model/` directory:
-
-- `MFN_AdaArcDistill_backbone.pth` - Trained MobileFaceNet model
-- `mobile_config.json` - Model configuration
-- `mobilefacenet_mobile.onnx` - Converted ONNX model for mobile
+```
+mobile_face_recognition/
+├── api.py                 # Main Flask API
+├── api_requirements.txt   # API dependencies
+├── test_api.py           # Test script
+├── face_recognition_system.py  # Core face recognition logic
+├── data/                 # Image storage folder
+├── user_database.json    # User metadata database
+└── face_database.json    # Face recognition embeddings
+```
 
 ## Configuration
 
-### Recognition Threshold
+- **Max file size**: 16MB (configurable in `api.py`)
+- **Image format**: JPEG (converted automatically)
+- **Threshold**: Default 0.3 for face matching (configurable per request)
+- **Port**: 5000 (configurable in `api.py`)
 
-Adjust the similarity threshold in `app.py`:
+## Error Handling
 
-- **0.2**: More lenient matching (may increase false positives)
-- **0.3**: Balanced matching (recommended)
-- **0.5**: Stricter matching (may increase false negatives)
+The API includes comprehensive error handling:
+- Input validation
+- File processing errors
+- Face recognition failures
+- Database errors
+- Proper HTTP status codes
 
-### Custom User Data
+## Security Notes
 
-Edit the registration section in `app.py`:
-
-```python
-# Register your own users
-fr_system.register_user("Your Name", "path/to/your/photo.jpg")
-fr_system.register_user("Friend Name", "path/to/friend/photo.jpg")
-
-# Test with your own images
-user_id, name, similarity = fr_system.match_face("path/to/test/image.jpg")
-```
-
-## Requirements
-
-See `requirements.txt` for complete Python dependencies:
-
-- torch
-- torchvision
-- facenet-pytorch
-- opencv-python
-- Pillow
-- numpy
+- Images are stored locally in the `data/` folder
+- No authentication implemented (add as needed for production)
+- Consider rate limiting for production use
+- Validate image formats and sizes
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Model file not found**: Ensure model files are in the `model/` directory
-2. **Face not detected**: Use well-lit images with clear frontal faces
-3. **Low recognition accuracy**: Adjust threshold or use higher quality images
-4. **Flutter build issues**: Run `flutter clean` and `flutter pub get`
+1. **Face recognition system fails to initialize**
+   - Check that all dependencies are installed
+   - Verify model files exist in the correct locations
 
-### Performance Tips
+2. **Image processing errors**
+   - Ensure images are valid JPEG/PNG files
+   - Check image size (max 16MB)
 
-- Use high-quality, well-lit images for registration
-- Ensure faces are clearly visible and frontal
-- Test with different lighting conditions
-- Adjust threshold based on your accuracy requirements
->>>>>>> b10c54c (Initial commit)
+3. **No faces detected**
+   - Ensure images contain clear, front-facing faces
+   - Check image quality and lighting
+
+### Debug Mode
+
+The API runs in debug mode by default. Check the console output for detailed error messages.
+
+## Production Deployment
+
+For production use, consider:
+- Using a production WSGI server (Gunicorn, uWSGI)
+- Adding authentication and authorization
+- Implementing rate limiting
+- Using a proper database (PostgreSQL, MongoDB)
+- Adding logging and monitoring
+- Using HTTPS
+- Implementing image compression and optimization
