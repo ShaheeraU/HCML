@@ -34,17 +34,5 @@
     "image_path": "data/1c2a68c5-6955-4435-ad46-d616173f1d8f.jpg",
     "registered_at": "2025-09-04T13:08:05.726429",
     "face_recognition_id": "8"
-  },
-  "e7a8e035-13fa-4aec-b708-b19a485cec04": {
-    "name": "Ahsan",
-    "image_path": "data/e7a8e035-13fa-4aec-b708-b19a485cec04.jpg",
-    "registered_at": "2025-09-04T14:11:25.369443",
-    "face_recognition_id": "9"
-  },
-  "6f374442-9055-42fe-bd5d-469e145cb468": {
-    "name": "Ahsan ali",
-    "image_path": "data/6f374442-9055-42fe-bd5d-469e145cb468.jpg",
-    "registered_at": "2025-09-04T15:46:53.319208",
-    "face_recognition_id": "10"
   }
 }
