@@ -1,320 +1,264 @@
-# Face Recognition API
+# Mobile Face Recognition System
 
-A Flask-based REST API for face registration and recognition using the MobileFaceNet model.
+A comprehensive face recognition system built with PyTorch and Expo React Native, featuring MobileFaceNet optimized for mobile deployment using AdaDistill knowledge distillation.
 
 ## Features
 
-- **Face Registration**: Register new faces with names and unique IDs
-- **Face Recognition**: Recognize faces from the database
-- **User Management**: List, view, and delete registered users
-- **File-based Storage**: Images stored in `data/` folder, metadata in JSON
-- **Base64 Image Support**: Accept images as base64 encoded strings
+- **Advanced Face Detection**: MTCNN-based face detection and alignment
+- **Mobile-Optimized Model**: MobileFaceNet with AdaDistill optimization
+- **Cross-Platform Support**: Expo React Native app for iOS and Android
+- **RESTful API**: Flask-based backend with comprehensive endpoints
+- **Docker Support**: Containerized deployment with persistent data storage
+- **Real-time Processing**: Camera and gallery image processing
+- **User Management**: Complete registration and recognition system
 
-## API Endpoints
+## Project Structure
 
-### 1. Health Check
 ```
-GET /health
-```
-Returns the health status of the API and face recognition system.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00",
-  "face_recognition_system": "initialized"
-}
-```
-
-### 2. Register Face
-```
-POST /register
-```
-Register a new face with name and image.
-
-**Request Body:**
-```json
-{
-  "name": "John Doe",
-  "image": "base64_encoded_image_string"
-}
-```
-
-**Response (Success - 201):**
-```json
-{
-  "success": true,
-  "user_id": "uuid-string",
-  "name": "John Doe",
-  "message": "Face registered successfully"
-}
+mobile_face_recognition/
+├── api.py                          # Flask REST API server
+├── app.py                          # Standalone Python application
+├── face_recognition_system.py      # Core face recognition system
+├── mobile_facenet_converter.py     # Model conversion utilities
+├── face_database.json             # User face database
+├── user_database.json             # User metadata database
+├── requirements.txt                # Python dependencies
+├── api_requirements.txt            # API-specific dependencies
+├── Dockerfile                      # Docker configuration
+├── model/                          # Model files
+│   ├── MFN_AdaArcDistill_backbone.pth
+│   ├── mobile_config.json
+│   └── mobilefacenet_mobile.onnx
+├── data/                           # User uploaded images
+│   ├── *.jpg                       # User face images
+│   └── *.jpeg                      # Sample images
+├── output/                         # Processed images
+└── my-app/                         # Expo React Native application
+    ├── app/                        # App screens and navigation
+    ├── components/                 # Reusable components
+    ├── constants/                  # App constants and configuration
+    └── package.json                # Node.js dependencies
 ```
 
-**Response (Error - 400/500):**
-```json
-{
-  "error": "Error message"
-}
-```
+## Setup
 
-### 3. Recognize Face
-```
-POST /recognize
-```
-Recognize a face from the database.
+### Prerequisites
 
-**Request Body:**
-```json
-{
-  "image": "base64_encoded_image_string",
-  "threshold": 0.3
-}
-```
+- Python 3.8+
+- Docker (for containerized deployment)
+- Node.js and npm (for Expo app)
+- Expo CLI
 
-**Response (Match Found):**
-```json
-{
-  "success": true,
-  "match_found": true,
-  "user_id": "uuid-string",
-  "name": "John Doe",
-  "similarity": 0.85,
-  "threshold": 0.3,
-  "registered_at": "2024-01-15T10:30:00",
-  "image_path": "data/uuid-string.jpg"
-}
-```
+## Docker Deployment (Recommended)
 
-**Response (No Match):**
-```json
-{
-  "success": true,
-  "match_found": false,
-  "message": "No matching face found",
-  "best_similarity": 0.25,
-  "threshold": 0.3
-}
-```
+1. **Build the Docker image**
+   ```bash
+   docker build -t face-recognition-app .
+   ```
 
-### 4. List Users
-```
-GET /users
-```
-List all registered users.
+2. **Run the container**
+   ```bash
+   docker run -p 5002:5002 -v face-recognition-data:/app/data face-recognition-app
+   ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "total_users": 2,
-  "users": [
-    {
-      "user_id": "uuid-1",
-      "name": "John Doe",
-      "registered_at": "2024-01-15T10:30:00",
-      "image_path": "data/uuid-1.jpg"
-    },
-    {
-      "user_id": "uuid-2",
-      "name": "Jane Smith",
-      "registered_at": "2024-01-15T11:00:00",
-      "image_path": "data/uuid-2.jpg"
-    }
-  ]
-}
-```
+The API will be available at `http://localhost:5002`
 
-### 5. Get User Details
-```
-GET /users/<user_id>
-```
-Get details of a specific user.
+## Local Development Setup
 
-**Response:**
-```json
-{
-  "success": true,
-  "user": {
-    "user_id": "uuid-string",
-    "name": "John Doe",
-    "registered_at": "2024-01-15T10:30:00",
-    "image_path": "data/uuid-string.jpg"
-  }
-}
-```
+### Backend API
 
-### 6. Delete User
-```
-DELETE /users/<user_id>
-```
-Delete a user and their associated data.
+1. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   pip install -r api_requirements.txt
+   ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "User John Doe deleted successfully"
-}
-```
+2. **Run the Flask API server**
+   ```bash
+   python api.py
+   ```
 
-## Installation & Setup
+### Standalone Python Script
 
-### 1. Install Dependencies
-```bash
-# Install main requirements
-pip install -r requirements.txt
+1. **Run the standalone application**
+   ```bash
+   python app.py
+   ```
 
-# Install API-specific requirements
-pip install -r api_requirements.txt
-```
+### How to use
 
-### 2. Run the API
-```bash
-python api.py
-```
+- You can edit the name and image path for the user registration in the app.py
+- You can edit the path of the image to match the face in app.py
 
-The API will start on `http://localhost:5000`
-
-### 3. Test the API
-```bash
-python test_api.py
-```
-
-## Usage Examples
-
-### Python Client Example
+### Example Usage
 
 ```python
-import requests
-import base64
+from face_recognition_system import FaceRecognitionSystem
 
-# Encode image to base64
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+# Initialize system
+fr_system = FaceRecognitionSystem()
 
-# Register a face
-def register_face(name, image_path):
-    url = "http://localhost:5000/register"
-    data = {
-        "name": name,
-        "image": encode_image(image_path)
-    }
-    response = requests.post(url, json=data)
-    return response.json()
+# Register users with custom names and images
+fr_system.register_user("John Doe", "data/john.jpg")
+fr_system.register_user("Jane Smith", "data/jane.jpg")
 
-# Recognize a face
-def recognize_face(image_path, threshold=0.3):
-    url = "http://localhost:5000/recognize"
-    data = {
-        "image": encode_image(image_path),
-        "threshold": threshold
-    }
-    response = requests.post(url, json=data)
-    return response.json()
+# Match a face with custom threshold
+user_id, name, similarity = fr_system.match_face(
+    "data/test_image.jpg",
+    threshold=0.3  # Adjust threshold: 0.2 (lenient) to 0.5 (strict)
+)
 
-# Usage
-result = register_face("John Doe", "path/to/image.jpg")
-print(f"Registered with ID: {result['user_id']}")
-
-match = recognize_face("path/to/query_image.jpg")
-if match['match_found']:
-    print(f"Recognized: {match['name']}")
+if user_id:
+    print(f"Recognized: {name} (Confidence: {similarity:.3f})")
 else:
     print("No match found")
 ```
 
-### cURL Examples
+## Expo React Native App
 
-**Register a face:**
+1. **Install dependencies**
+   ```bash
+   cd my-app
+   npm install
+   ```
+
+2. **Start the Expo development server**
+   ```bash
+   npx expo start
+   ```
+
+3. **Run on device/simulator**
+   - Scan QR code with Expo Go app (iOS/Android)
+   - Press `i` for iOS simulator
+   - Press `a` for Android emulator
+
+### Expo App Features
+
+- **User Registration**: Register new users with face photos
+- **Face Recognition**: Real-time face matching against registered users
+- **User Management**: View and manage registered users
+- **Camera Integration**: Capture photos directly from the app
+- **Gallery Support**: Process images from device gallery
+
+## Model Files
+
+Ensure these files are in the `model/` directory:
+
+- `MFN_AdaArcDistill_backbone.pth` - Trained MobileFaceNet model
+- `mobile_config.json` - Model configuration
+- `mobilefacenet_mobile.onnx` - Converted ONNX model for mobile
+
+## Flask API Configuration
+
+### API Endpoints
+
+The Flask API provides the following endpoints:
+
+- `GET /health` - Health check endpoint
+- `POST /register` - Register a new user with face image
+- `POST /recognize` - Recognize a face from uploaded image
+- `GET /users` - List all registered users
+- `GET /users/<user_id>` - Get specific user details
+- `DELETE /users/<user_id>` - Delete a user
+
+### API Usage Examples
+
+**Register a new user:**
 ```bash
-curl -X POST http://localhost:5000/register \
+curl -X POST http://localhost:5002/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "John Doe",
-    "image": "base64_encoded_image_string"
+    "image": "base64_encoded_image_data"
   }'
 ```
 
 **Recognize a face:**
 ```bash
-curl -X POST http://localhost:5000/recognize \
+curl -X POST http://localhost:5002/recognize \
   -H "Content-Type: application/json" \
   -d '{
-    "image": "base64_encoded_image_string",
+    "image": "base64_encoded_image_data",
     "threshold": 0.3
   }'
 ```
 
 **List all users:**
 ```bash
-curl http://localhost:5000/users
+curl http://localhost:5002/users
 ```
 
-## File Structure
+### Recognition Threshold
 
+Adjust the similarity threshold in API requests:
+
+- **0.2**: More lenient matching (may increase false positives)
+- **0.3**: Balanced matching (recommended)
+- **0.5**: Stricter matching (may increase false negatives)
+
+### Environment Variables
+
+Configure the Flask app with these environment variables:
+
+```bash
+export FLASK_APP=api.py
+export FLASK_ENV=development  # or production
+export PYTHONPATH=/app
 ```
-mobile_face_recognition/
-├── api.py                 # Main Flask API
-├── api_requirements.txt   # API dependencies
-├── test_api.py           # Test script
-├── face_recognition_system.py  # Core face recognition logic
-├── data/                 # Image storage folder
-├── user_database.json    # User metadata database
-└── face_database.json    # Face recognition embeddings
+
+## Requirements
+
+### Python Dependencies
+
+See `requirements.txt` and `api_requirements.txt` for complete dependencies:
+
+- torch
+- torchvision
+- facenet-pytorch
+- flask
+- werkzeug
+- Pillow
+- numpy
+
+### Node.js Dependencies
+
+See `my-app/package.json` for Expo app dependencies:
+
+- expo
+- react-native
+- @expo/vector-icons
+
+## Docker Volume Management
+
+The Docker setup uses a named volume for persistent data storage:
+
+```bash
+# View volume details
+docker volume inspect face-recognition-data
+
+# Backup data (optional)
+docker run --rm -v face-recognition-data:/data -v $(pwd):/backup alpine tar czf /backup/face-data-backup.tar.gz -C /data .
+
+# Restore data (optional)
+docker run --rm -v face-recognition-data:/data -v $(pwd):/backup alpine tar xzf /backup/face-data-backup.tar.gz -C /data
 ```
-
-## Configuration
-
-- **Max file size**: 16MB (configurable in `api.py`)
-- **Image format**: JPEG (converted automatically)
-- **Threshold**: Default 0.3 for face matching (configurable per request)
-- **Port**: 5000 (configurable in `api.py`)
-
-## Error Handling
-
-The API includes comprehensive error handling:
-- Input validation
-- File processing errors
-- Face recognition failures
-- Database errors
-- Proper HTTP status codes
-
-## Security Notes
-
-- Images are stored locally in the `data/` folder
-- No authentication implemented (add as needed for production)
-- Consider rate limiting for production use
-- Validate image formats and sizes
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Face recognition system fails to initialize**
-   - Check that all dependencies are installed
-   - Verify model files exist in the correct locations
+1. **Model file not found**: Ensure model files are in the `model/` directory
+2. **Face not detected**: Use well-lit images with clear frontal faces
+3. **Low recognition accuracy**: Adjust threshold or use higher quality images
+4. **Docker build fails**: Check that all dependencies are compatible with Python 3.10
+5. **API connection issues**: Ensure the Flask server is running on port 5002
+6. **Expo app issues**: Run `npx expo start --clear` to clear cache
 
-2. **Image processing errors**
-   - Ensure images are valid JPEG/PNG files
-   - Check image size (max 16MB)
+### Performance Tips
 
-3. **No faces detected**
-   - Ensure images contain clear, front-facing faces
-   - Check image quality and lighting
-
-### Debug Mode
-
-The API runs in debug mode by default. Check the console output for detailed error messages.
-
-## Production Deployment
-
-For production use, consider:
-- Using a production WSGI server (Gunicorn, uWSGI)
-- Adding authentication and authorization
-- Implementing rate limiting
-- Using a proper database (PostgreSQL, MongoDB)
-- Adding logging and monitoring
-- Using HTTPS
-- Implementing image compression and optimization
+- Use high-quality, well-lit images for registration
+- Ensure faces are clearly visible and frontal
+- Test with different lighting conditions
+- Adjust threshold based on your accuracy requirements
+- Use Docker volumes for persistent data storage
+- Monitor container logs for debugging: `docker logs <container_id>`
